@@ -592,6 +592,7 @@ static void MX_GPIO_Init(void)
   __HAL_RCC_GPIOA_CLK_ENABLE();
   __HAL_RCC_GPIOD_CLK_ENABLE();
   __HAL_RCC_GPIOG_CLK_ENABLE();
+  __HAL_RCC_GPIOB_CLK_ENABLE();
 
   /*Configure GPIO pin Output Level */
   HAL_GPIO_WritePin(GPIOG, GPIO_PIN_2, GPIO_PIN_RESET);
@@ -599,6 +600,9 @@ static void MX_GPIO_Init(void)
   /*Configure GPIO pin Output Level */
   HAL_GPIO_WritePin(GPIOD, GPIO_PIN_0|GPIO_PIN_1|GPIO_PIN_3|GPIO_PIN_4
                           |GPIO_PIN_5|GPIO_PIN_6|GPIO_PIN_7, GPIO_PIN_RESET);
+
+  /*Configure GPIO pin Output Level */
+  HAL_GPIO_WritePin(GPIOB, GPIO_PIN_8, GPIO_PIN_RESET);
 
   /*Configure GPIO pin : PG2 */
   GPIO_InitStruct.Pin = GPIO_PIN_2;
@@ -615,6 +619,13 @@ static void MX_GPIO_Init(void)
   GPIO_InitStruct.Pull = GPIO_PULLUP;
   GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_HIGH;
   HAL_GPIO_Init(GPIOD, &GPIO_InitStruct);
+
+  /*Configure GPIO pin : PB8 */
+  GPIO_InitStruct.Pin = GPIO_PIN_8;
+  GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
+  GPIO_InitStruct.Pull = GPIO_PULLUP;
+  GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_HIGH;
+  HAL_GPIO_Init(GPIOB, &GPIO_InitStruct);
 
 /* USER CODE BEGIN MX_GPIO_Init_2 */
 /* USER CODE END MX_GPIO_Init_2 */
@@ -996,6 +1007,41 @@ void StartDefaultTask(void *argument)
 //	  MoveToXYZ_mm(150, 200, 100);
 //	  while (move_in_progress) { update_motion_done(); osDelay(1); }
 //	  osDelay(2000);
+
+	  HAL_GPIO_WritePin(GPIOB, GPIO_PIN_8, GPIO_PIN_SET);	// pump off
+	  osDelay(3000);	// 3초 대기
+
+	  MoveToXYZ_mm(0, 100, 20);	// 시작
+	  while (move_in_progress) { update_motion_done(); osDelay(1); }
+	  osDelay(100);
+
+	  MoveToXYZ_mm(0, 100, 0);	// 흡착
+	  HAL_GPIO_WritePin(GPIOB, GPIO_PIN_8, GPIO_PIN_RESET);	// pump on
+	  while (move_in_progress) { update_motion_done(); osDelay(1); }
+	  osDelay(100);
+
+	  MoveToXYZ_mm(0, 100, 20);	// 수직 상승
+	  while (move_in_progress) { update_motion_done(); osDelay(1); }
+	  osDelay(100);
+
+	  MoveToXYZ_mm(240, 273, 100);	// 적재위치로 이동
+	  while (move_in_progress) { update_motion_done(); osDelay(1); }
+	  osDelay(100);
+
+	  MoveToXYZ_mm(240, 273, 40);	// 적재위치 직전 위치로 이동
+	  while (move_in_progress) { update_motion_done(); osDelay(1); }
+	  osDelay(100);
+
+	  MoveToXYZ_mm(240, 273, 10);	// 적재
+
+	  while (move_in_progress) { update_motion_done(); osDelay(1); }
+	  HAL_GPIO_WritePin(GPIOB, GPIO_PIN_8, GPIO_PIN_SET);	// pump off
+	  osDelay(100);
+
+	  MoveToXYZ_mm(0, 100, 20);	// 원점
+	  while (move_in_progress) { update_motion_done(); osDelay(1); }
+	  osDelay(10000);
+
 	  osDelay(1);
   }
   /* USER CODE END 5 */
@@ -1014,18 +1060,18 @@ void StartTask02(void *argument)
   /* Infinite loop */
   for(;;)
   {
-	  if (uart_cmd_ready)
-	  {
-		  uart_cmd_ready = 0;
-
-		  MoveToXYZ_mm(uart_x, uart_y, uart_z);
-
-		  // 이동 완료까지 대기(너 코드 방식 유지)
-		  while (move_in_progress) {
-			  update_motion_done();
-			  osDelay(1);
-		  }
-	  }
+//	  if (uart_cmd_ready)
+//	  {
+//		  uart_cmd_ready = 0;
+//
+//		  MoveToXYZ_mm(uart_x, uart_y, uart_z);
+//
+//		  // 이동 완료까지 대기(너 코드 방식 유지)
+//		  while (move_in_progress) {
+//			  update_motion_done();
+//			  osDelay(1);
+//		  }
+//	  }
 	  osDelay(1);
   }
   /* USER CODE END StartTask02 */
